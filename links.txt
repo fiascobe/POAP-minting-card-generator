@@ -1,4 +1,11 @@
-http://POAP.xyz/mint/123456
-http://POAP.xyz/mint/asdasd
-http://POAP.xyz/mint/123asd
-http://POAP.xyz/mint/asd123
+http://POAP.xyz/mint/111111
+http://POAP.xyz/mint/222222
+http://POAP.xyz/mint/333333
+http://POAP.xyz/mint/444444
+http://POAP.xyz/mint/555555
+http://POAP.xyz/mint/666666
+http://POAP.xyz/mint/777777
+http://POAP.xyz/mint/888888
+http://POAP.xyz/mint/999999
+
+
