@@ -95,7 +95,7 @@ def merge_images_inside(image_outer_path, qr_codes_folder, output_folder, base_f
 
         # --- Add Counter --- # <-- RE-ENABLED BLOCK
         counter_text = str(i)
-        counter_color = "#da2c3d"
+        counter_color = "#000000"
         dpi = 300
         y_offset_mm = 5
         
