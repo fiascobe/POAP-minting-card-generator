@@ -5,10 +5,13 @@ import qrcode
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
 from reportlab.lib.pagesizes import A4
+import math  # <-- NEW: Import math for ceiling function
 
 # ==============================================================================
 # PART 1: QR Code Generation and Merging
 # ==============================================================================
+
+# (This entire section remains unchanged)
 
 def get_last_6_alphanum(url):
     """Extracts the last 6 alphanumeric characters from a URL."""
@@ -44,32 +47,28 @@ def merge_images_inside(image_outer_path, qr_codes_folder, output_folder, base_f
     font_path = "rubik.ttf"
     try:
         font = ImageFont.truetype(font_path, font_size)
-        # counter_font = ImageFont.truetype(font_path, counter_font_size)
+        counter_font = ImageFont.truetype(font_path, counter_font_size)
         print(f"Loaded font from: {font_path}")
     except Exception as e:
         print(f"Failed to load font '{font_path}': {e}")
         font = ImageFont.load_default()
-        # counter_font = ImageFont.load_default()
+        counter_font = ImageFont.load_default()
         print("Falling back to default font.")
 
     merged_image_paths = []
 
     # --- START: SORTING FIX ---
-    # 1. Get only the relevant QR code files
     qr_files = [f for f in os.listdir(qr_codes_folder) if f.startswith("QR_") and f.endswith(".png")]
 
-    # 2. Define a function that extracts the number from the filename
     def get_file_number(filename):
         match = re.search(r'QR_(\d+)_', filename)
         if match:
             return int(match.group(1))
-        return 0 # Default value if no number is found
+        return 0
 
-    # 3. Sort the list of files using the number we extracted as the key
     sorted_qr_files = sorted(qr_files, key=get_file_number)
     # --- END: SORTING FIX ---
 
-    # Now, loop through the correctly sorted list
     for i, filename in enumerate(sorted_qr_files, start=1):
         qr_filepath = os.path.join(qr_codes_folder, filename)
         image_inner = Image.open(qr_filepath).convert("RGB")
@@ -94,25 +93,24 @@ def merge_images_inside(image_outer_path, qr_codes_folder, output_folder, base_f
         draw.text((text_x, text_y), text, font=font, fill="black")
 
         # --- Add Counter ---
-        # counter_text = str(i)
-        # counter_color = "#da2c3d"
-        # dpi = 300
-        # y_offset_mm = 5
+        counter_text = str(i)
+        counter_color = "#000000"
+        dpi = 300
+        y_offset_mm = 5
         
-        # y_offset_px = y_offset_mm * (dpi / 25.4)
+        y_offset_px = y_offset_mm * (dpi / 25.4)
         
-        # img_width, img_height = image_combined.size
+        img_width, img_height = image_combined.size
 
-        # counter_bbox = draw.textbbox((0, 0), counter_text, font=counter_font)
-        # counter_text_width = counter_bbox[2] - counter_bbox[0]
-        # counter_text_height = counter_bbox[3] - counter_bbox[1]
+        counter_bbox = draw.textbbox((0, 0), counter_text, font=counter_font)
+        counter_text_width = counter_bbox[2] - counter_bbox[0]
+        counter_text_height = counter_bbox[3] - counter_bbox[1]
 
-        # counter_x = (img_width - counter_text_width) / 2
-        # counter_y = img_height - y_offset_px - counter_text_height
+        counter_x = (img_width - counter_text_width) / 2
+        counter_y = img_height - y_offset_px - counter_text_height
 
-        # draw.text((counter_x, counter_y), counter_text, font=counter_font, fill=counter_color)
+        draw.text((counter_x, counter_y), counter_text, font=counter_font, fill=counter_color)
 
-        # The rest of the function remains the same
         original_counter_match = re.search(r'QR_(\d+)_', filename)
         original_counter = original_counter_match.group(1) if original_counter_match else "X"
         
@@ -134,7 +132,6 @@ def create_pdf_from_images(images, output_pdf):
     # Configuration
     card_width_mm, card_height_mm = 57, 85
     cards_per_row, cards_per_col = 3, 3
-    # offset_x_mm and offset_y_mm are no longer needed
     spacing_mm = 5  # Spacing between cards
     dpi = 300
 
@@ -145,16 +142,10 @@ def create_pdf_from_images(images, output_pdf):
     page_width, page_height = A4
 
     # --- New Centering Logic ---
-    # Calculate total grid dimensions
     grid_width = (cards_per_row * card_width) + ((cards_per_row - 1) * spacing)
     grid_height = (cards_per_col * card_height) + ((cards_per_col - 1) * spacing)
-
-    # Find page center
     center_x = page_width / 2
     center_y = page_height / 2
-
-    # Calculate the bottom-left corner of the *entire grid*
-    # This will be the (x, y) for the card at (row 2, col 0)
     grid_origin_x = center_x - (grid_width / 2)
     grid_origin_y = center_y - (grid_height / 2)
     # --- End New Logic ---
@@ -163,20 +154,39 @@ def create_pdf_from_images(images, output_pdf):
     cards_per_page = cards_per_row * cards_per_col
     temp_files_to_clean = []
 
+    # --- NEW: Page Counter Logic Setup ---
+    total_images = len(images)
+    if total_images == 0:
+        print("No images to process. PDF will be empty.")
+        c.save()
+        return
+
+    total_pages = math.ceil(total_images / cards_per_page)
+    current_page = 1
+    
+    # Define margins for page number
+    margin_right = 15 * mm 
+    margin_bottom = 10 * mm
+    page_num_x = page_width - margin_right
+    page_num_y = margin_bottom
+    # --- END: Page Counter Logic Setup ---
+
     for i, img_path in enumerate(images):
         if i % cards_per_page == 0 and i != 0:
+            # --- NEW: Draw Page Number on the *previous* page before showing it ---
+            page_text = f"Page {current_page} of {total_pages}"
+            c.setFont("Helvetica", 9)
+            c.drawRightString(page_num_x, page_num_y, page_text)
+            # --- END: Draw Page Number ---
+            
             c.showPage()
+            current_page += 1 # <-- NEW: Increment page counter
 
         row = (i % cards_per_page) // cards_per_row
-        col = (i % cards_per_page) % cards_per_row
+        col = (i % cards_per_page) % cards_per_col
 
         # --- Updated Position Calculation ---
-        # Calculate position from the new grid origin
         x = grid_origin_x + col * (card_width + spacing)
-
-        # Y-position is calculated from the bottom (grid_origin_y).
-        # The 'row' value (0, 1, 2) is top-to-bottom.
-        # We must invert it to (2, 1, 0) for bottom-up drawing.
         inverted_row = (cards_per_col - 1 - row)
         y = grid_origin_y + (inverted_row * (card_height + spacing))
         # --- End Updated Calculation ---
@@ -193,7 +203,12 @@ def create_pdf_from_images(images, output_pdf):
         temp_files_to_clean.append(temp_path)
 
         c.drawImage(temp_path, x, y, width=card_width, height=card_height)
-        # The call to draw_crop_marks has been removed.
+
+    # --- NEW: Draw Page Number on the *final* page ---
+    page_text = f"Page {current_page} of {total_pages}"
+    c.setFont("Helvetica", 9)
+    c.drawRightString(page_num_x, page_num_y, page_text)
+    # --- END: Draw Page Number ---
 
     c.save()
     for temp_file in temp_files_to_clean:
@@ -212,10 +227,10 @@ if __name__ == "__main__":
     base_image_path = 'front.png'
     qr_codes_folder = 'QR Codes'
     merged_images_folder = 'Merged Images'
-    output_pdf_path = 'cards_layout_No_counter_RGB.pdf'
+    output_pdf_path = 'cards_layout_With_Counter_RGB.pdf'
     base_filename = 'merged_image'
     font_size = 25
-    # counter_font_size = 20 # Font size for the new counter
+    counter_font_size = 20
 
     # --- Step 1: Generate QR Codes ---
     if not os.path.exists(qr_codes_folder):
@@ -225,7 +240,7 @@ if __name__ == "__main__":
     with open(links_file, "r") as file:
         for url in file.readlines():
             url = url.strip()
-            if url: # Ensure the line is not empty
+            if url: 
                 generate_qr(url, counter, qr_codes_folder)
                 counter += 1
     print(f"QR codes generated successfully in the '{qr_codes_folder}' folder!")
@@ -238,7 +253,7 @@ if __name__ == "__main__":
         output_folder=merged_images_folder,
         base_filename=base_filename,
         font_size=font_size,
-        # counter_font_size=counter_font_size # Pass the new parameter
+        counter_font_size=counter_font_size
     )
 
     # --- Step 3: Create the final PDF layout ---
