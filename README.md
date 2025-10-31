@@ -1,164 +1,102 @@
-POAP Minting Card Generator
-This project is a collection of Python scripts to generate print-ready PDF files for "Scan to Mint" physical cards. It takes a list of URLs from links.txt, generates a unique QR code for each, and merges it onto a front-card design (front.png).
+Markdown
 
-The scripts then arrange these individual cards into a 3x3 grid, centered on an A4 page, ready for printing. It also includes scripts to generate a corresponding back-side PDF (using back.png) and a separate cut-line guide.
+# POAP Card Printing Generator
 
-The project provides versions for both RGB (for digital use or standard home printing) and CMYK (for professional press printing), with options to include a sequential counter on each card.
+This project provides a set of Python scripts to automatically generate professional, print-ready PDF files for physical POAP (Proof of Attendance Protocol) minting cards. It takes a list of minting URLs, generates unique QR codes, and arranges them onto A4 layouts with corresponding backs and precise cut lines.
+
+## Features
+
+* **Automatic QR Code Generation:** Creates a unique QR code for each URL provided in `links.txt`.
+* **Dynamic Card Fronts:** Merges each QR code onto a `front.png` template.
+* **Custom Text:** Automatically adds the last 6 characters of the minting link and a sequential counter to each card front.
+* **Print-Ready Layout:** Arranges cards in a centered 3x3 grid on an A4 page.
+* **Duplex (Two-Sided) Support:** Generates a mirrored 3x3 layout for the card backs (`back.png`) for perfect alignment during two-sided printing.
+* **Bleed & Cut Lines:** Creates a separate PDF with precise cut lines, accounting for a 3mm bleed, to guide a professional printer.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+* Python 3.x
+* The required Python libraries. You can install them using pip:
+
+```bash
+pip install pillow qrcode reportlab
+Required Files
+Place the following files in the same directory as the Python scripts:
+
+links.txt: A plain text file containing your list of POAP minting URLs. Each URL must be on a new line. (See links.txt for an example).
+
+front.png: The template image for the card front. This image must have a blank area for the QR code.
+
+back.png: The image to be used for the card back.
+
+rubik.ttf: The font file used to write the 6-character code and counter on the card fronts.
 
 How to Use
-Install Dependencies: You'll need to install the required Python libraries.
+Follow these steps to generate your print-ready files:
+
+Prepare Your Links: Open the links.txt file and paste your list of minting URLs. Ensure there is only one URL per line.
+
+Run the Scripts: Execute the three Python scripts in order from your terminal.
+
+First, generate the card fronts:
 
 Bash
 
-pip install Pillow qrcode reportlab
-Prepare Input Files:
+python "Regular minting card - Front script v2.py"
+This will create two new folders (QR Codes and Merged Images) and your main print file: cards_layout_With_Counter_RGB.pdf.
 
-links.txt: Edit this file and paste in your list of minting URLs, one URL per line.
-
-front.png: This is the design for the front of the card. The script is configured to place the QR code in the blank square.
-
-back.png: Place your card-back design in this file. (Note: The scripts Back script CMYK.py and Back script RGB.py look for back.png. The provided back.jpg will need to be renamed to back.png).
-
-
-rubik.ttf: The scripts require this font file to be in the same folder to write the 6-character code and counter. If you don't have it, you must download it or change the font_path variable in the scripts to a different .ttf font file.
-
-Run the Scripts (Example): If you want to create professional print-ready files (CMYK) with a counter, you would run the following scripts:
-
-Generate Fronts:
+Next, generate the card backs:
 
 Bash
 
-python "Minting card centered with counter CMYK.py"
-This creates cards_layout_with_counter_CMYK.pdf.
+python "Regular minting card - Back script.py"
+This creates the mirrored layout for the back: back_layout_rgb.pdf.
 
-Generate Backs:
-
-Bash
-
-python "Back script CMYK.py"
-This creates back_layout_CMYK.pdf.
-
-Generate Cut Guide (Optional):
+Finally, generate the cut lines:
 
 Bash
 
-python "Cut script.py"
-This creates cut_lines_layout.pdf.
+python "Regular minting card - Cut script.py"
+This creates the cutting guide for the printer: cut_lines_layout.pdf.
 
-Print:
+Send to Printer: You now have three PDF files. Send all three to your print shop.
 
-Send the generated ...CMYK.pdf files to your print shop.
+Printing Instructions
+For best results, provide your print shop with the following instructions:
 
-Instruct them to print double-sided, flipping on the long edge.
+Files to Print:
 
-The cut_lines_layout.pdf can be used as a reference for cutting.
+Front: cards_layout_With_Counter_RGB.pdf
 
-File Descriptions
-Input Files (You provide these)
-links.txt
+Back: back_layout_rgb.pdf
 
-The source list of URLs, one per line. The scripts read this file to generate the QR codes.
+Cut Guide: cut_lines_layout.pdf
 
-front.png
+Paper: A4 size, heavy card stock.
 
-The base image for the front of the card. It should have a transparent or white area for the QR code.
+Printing:
 
-back.jpg / back.png
+Print in full color (CMYK).
 
-The base image for the back of the card. Note: All back-side scripts expect this file to be named back.png.
+Print duplex (two-sided), flipping on the long edge.
 
-rubik.ttf (Not provided)
+Ensure printing is set to 100% scale (Actual Size), not "Fit to Page".
 
-A font file required by the scripts to draw text.
+Cutting:
 
-Python Scripts (You run these)
-Front Card Generation (Choose one)
+Use the cut_lines_layout.pdf as the guide for cutting. The artwork includes a 3mm bleed, so the cuts should be made along these lines.
 
-Minting card centered with counter CMYK.py 
+The final card size after cutting will be 51x79mm (based on a 57x85mm full-bleed design with 3mm bleed).
 
-Best for Pro Printing.
+Customization
+You can easily customize the scripts to fit your needs:
 
-Generates QR codes from links.txt.
+Card Size: To change the card size, update the card_width_mm and card_height_mm variables at the top of all three Python scripts.
 
-Merges them onto front.png.
+Layout: You can change the grid by adjusting cards_per_row and cards_per_col in all three scripts.
 
-Adds the last 6 characters of the URL as text.
+QR & Text Position: In Regular minting card - Front script v2.py, you can change the paste_position variable for the QR code and the text_x/text_y calculations for the text.
 
-Adds a sequential counter (1, 2, 3...) to each card.
-
-Converts the final images to CMYK (print-ready color space).
-
-Applies a 5% magenta reduction to correct print colors.
-
-Arranges 9 cards on a centered A4 PDF named cards_layout_with_counter_CMYK.pdf.
-
-Minting card centered NO counter CMYK.py
-
-Best for Pro Printing.
-
-Identical to the script above, but does NOT add the sequential counter.
-
-Outputs cards_layout_No_Counter_CMYK.pdf.
-
-Minting card centered with counter RGB.py
-
-For Home Printing / Digital.
-
-Same as the first script, but keeps the images in RGB color space.
-
-Adds a sequential counter.
-
-Outputs cards_layout_With_Counter_RGB.pdf.
-
-Minting card centered without counter RGB.py
-
-For Home Printing / Digital.
-
-Same as the RGB script above, but does NOT add the sequential counter.
-
-Outputs cards_layout_No_counter_RGB.pdf.
-
-Back Card Generation (Choose one)
-Back script CMYK.py
-
-Best for Pro Printing.
-
-Takes back.png and converts it to CMYK with magenta reduction.
-
-Arranges it in a 3x3 grid on a centered A4 PDF.
-
-The grid is horizontally mirrored so that when printed double-sided, the backs align perfectly with the fronts.
-
-Outputs back_layout_CMYK.pdf.
-
-Back script RGB.py
-
-For Home Printing / Digital.
-
-Takes back.png and arranges it in a horizontally mirrored 3x3 grid.
-
-Keeps the image in RGB color space.
-
-Outputs back_layout_rgb.pdf.
-
-Utility Script
-Cut script.py
-
-Generates a simple PDF with 9 rectangles centered on an A4 page.
-
-These rectangles are inset by 3mm to show the "safe zone" or final cut line for the cards.
-
-Outputs cut_lines_layout.pdf.
-
-Generated Files & Folders (Created by scripts)
-QR Codes/ (Folder)
-
-An intermediate folder created by the "Minting card..." scripts. It stores the raw QR code images (e.g., QR_1_111111.png) before they are merged.
-
-Merged Images/ (Folder)
-
-An intermediate folder created by the "Minting card..." scripts. It stores the final, individual card images (e.g., merged_image_1_111111.jpg) after the QR code, text, and counter have been added.
-
-*.pdf (Files)
-
-These are the final, print-ready A4 output files (e.g., cards_layout_with_counter_CMYK.pdf, back_layout_CMYK.pdf).
+Font: To use a different font, replace rubik.ttf with your own .ttf file and update the font_path variable in Regular minting card - Front script v2.py.

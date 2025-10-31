@@ -127,6 +127,10 @@ def merge_images_inside(image_outer_path, qr_codes_folder, output_folder, base_f
 # PART 2: PDF Layout and Creation
 # ==============================================================================
 
+# ==============================================================================
+# PART 2: PDF Layout and Creation (MODIFIED FOR PAGE COUNT)
+# ==============================================================================
+
 def create_pdf_from_images(images, output_pdf):
     """Lays out merged images onto an A4 PDF, centered on the page."""
     # Configuration
@@ -161,7 +165,8 @@ def create_pdf_from_images(images, output_pdf):
         c.save()
         return
 
-    total_pages = math.ceil(total_images / cards_per_page)
+    # This line remains unchanged, but is not used by the page_text
+    total_pages = math.ceil(total_images / cards_per_page) 
     current_page = 1
     
     # Define margins for page number
@@ -173,17 +178,17 @@ def create_pdf_from_images(images, output_pdf):
 
     for i, img_path in enumerate(images):
         if i % cards_per_page == 0 and i != 0:
-            # --- NEW: Draw Page Number on the *previous* page before showing it ---
-            page_text = f"Page {current_page} of {total_pages}"
-            c.setFont("Helvetica", 9)
+            # --- MODIFIED: Draw Page Number (just number, small font) ---
+            page_text = str(current_page) # <-- CHANGED
+            c.setFont("Helvetica", 7)     # <-- CHANGED (from 9)
             c.drawRightString(page_num_x, page_num_y, page_text)
             # --- END: Draw Page Number ---
             
             c.showPage()
-            current_page += 1 # <-- NEW: Increment page counter
+            current_page += 1 # <-- Increment page counter
 
         row = (i % cards_per_page) // cards_per_row
-        col = (i % cards_per_page) % cards_per_col
+        col = (i % cards_per_page) % cards_per_row
 
         # --- Updated Position Calculation ---
         x = grid_origin_x + col * (card_width + spacing)
@@ -204,9 +209,9 @@ def create_pdf_from_images(images, output_pdf):
 
         c.drawImage(temp_path, x, y, width=card_width, height=card_height)
 
-    # --- NEW: Draw Page Number on the *final* page ---
-    page_text = f"Page {current_page} of {total_pages}"
-    c.setFont("Helvetica", 9)
+    # --- MODIFIED: Draw Page Number on the *final* page (just number, small font) ---
+    page_text = str(current_page) # <-- CHANGED
+    c.setFont("Helvetica", 7)     # <-- CHANGED (from 9)
     c.drawRightString(page_num_x, page_num_y, page_text)
     # --- END: Draw Page Number ---
 
